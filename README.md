@@ -1,4 +1,6 @@
-# ![](assets/bge_logo.jpeg) ![](assets/logomark.svg) Qdrant - bgem3 RAG Chatbot Framework
+#  ![](assets/logomark.svg) Qdrant - bgem3 RAG Chatbot Framework <p align="center">
+  <img src="assets/bge_logo.jpeg" alt="Diagram" width="200">
+</p>
 
 A retrieval-augmented generation (RAG) chatbot framework built on Qdrant, BGE-M3 embeddings, and Ollama.
 
