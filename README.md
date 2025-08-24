@@ -1,4 +1,6 @@
-#  ![](assets/logomark.svg) Qdrant - bgem3 RAG Chatbot Framework <p align="center">
+#  <p align="center">
+  <img src="assets/logomark.svg" alt="Diagram" width="300">
+</p> Qdrant - bgem3 RAG Chatbot Framework <p align="center">
   <img src="assets/bge_logo.jpeg" alt="Diagram" width="50">
 </p>
 
