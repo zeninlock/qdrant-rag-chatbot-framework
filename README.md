@@ -8,8 +8,13 @@ This repository provides the core framework; users supply their own text data on
 
 Features
 	•	Dense Retrieval: Uses Qdrant for accurate vector search.
+ 
 	•	Embeddings: Automatically generates embeddings using BGE-M3.
+ 
 	•	Reranking: Reranks top retrieved documents for relevance.
+ 
 	•	Context-Aware Answers: Maintains a short conversation history.
+ 
 	•	Answer Combining: Merges multiple candidate answers into concise responses.
+ 
 	•	Interactive CLI: Ask questions in the terminal.
