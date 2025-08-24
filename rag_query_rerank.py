@@ -1,13 +1,3 @@
-"""
-rag_query_rerank.py
-RAG pipeline with reranking:
-  - embeds a user's query with BGE-M3
-  - searches Qdrant
-  - reranks candidates with BGE-reranker
-  - sends top reranked context to local Mistral via Ollama
-  - maintains short conversation history
-"""
-
 import os
 import json
 import requests
@@ -15,14 +5,11 @@ import logging
 import numpy as np
 from dotenv import load_dotenv
 
-# load .env if present
 load_dotenv()
 
-# Logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO)                                             #basic logging
 logger = logging.getLogger("rag_query_rerank")
 
-# ------------------- Config -------------------
 QDRANT_HOST = os.getenv("QDRANT_HOST", "localhost")
 QDRANT_PORT = int(os.getenv("QDRANT_PORT", 6333))
 COLLECTION_NAME = os.getenv("COLLECTION_NAME", "chatbot_embeddings")
@@ -32,11 +19,10 @@ BGE_MODEL_NAME = os.getenv("BGE_MODEL_NAME", "BAAI/bge-m3")
 RERANK_MODEL_NAME = os.getenv("RERANK_MODEL_NAME", "BAAI/bge-reranker-base")
 USE_FP16 = os.getenv("USE_FP16", "true").lower() == "true"
 
-# Conversation history storage (in-memory)
-conversation_history = []
-MAX_HISTORY_TURNS = 5  # Keep last 5 exchanges
 
-# ------------------- Embedders -------------------
+conversation_history = []       # Conversation history storage
+MAX_HISTORY_TURNS = 5 
+
 try:
     from FlagEmbedding import BGEM3FlagModel, FlagReranker
 except Exception:
@@ -49,11 +35,10 @@ bge = BGEM3FlagModel(BGE_MODEL_NAME, use_fp16=USE_FP16)
 logger.info("Loading reranker model...")
 reranker = FlagReranker(RERANK_MODEL_NAME, use_fp16=True)
 
-# ------------------- Qdrant -------------------
 from qdrant_client import QdrantClient
 client = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
 
-def check_collection():
+def check_collection():                         #Checks for the collection in QDrant database
     try:
         cols = client.get_collections()
         names = [c.name for c in cols.collections]
@@ -65,7 +50,7 @@ def check_collection():
         logger.error(f"Error querying Qdrant collections: {e}")
         return False
 
-def search_qdrant(query_embedding, top_k=20):
+def search_qdrant(query_embedding, top_k=20): #Searches QDrant database for top 20 similar vectors to the the query (cosine similarity)
     try:
         vec = np.array(query_embedding, dtype=np.float32).tolist()
         results = client.search(
@@ -78,9 +63,9 @@ def search_qdrant(query_embedding, top_k=20):
         logger.error(f"Qdrant search failed: {e}")
         return []
 
-# ------------------- Reranking -------------------
-def rerank(query: str, docs: list, top_k: int = 3):
-    """Rerank docs (list of Qdrant hits) with a cross-encoder"""
+
+def rerank(query: str, docs: list, top_k: int = 3): #Reranks the top 20 similar vectors using cross encoding and ranks the top 3
+
     candidates = []
     for h in docs:
         payload = h.payload or {}
@@ -104,8 +89,7 @@ def rerank(query: str, docs: list, top_k: int = 3):
     rescored.sort(key=lambda x: x["rerank_score"], reverse=True)
     return rescored[:top_k]
 
-# ------------------- Ollama -------------------
-def call_ollama(prompt, max_tokens=350, timeout=120):
+def call_ollama(prompt, max_tokens=350, timeout=120): #Calls ollama
     url = f"{OLLAMA_HOST}/api/generate"
     payload = {
         "model": OLLAMA_MODEL,
@@ -126,7 +110,7 @@ def call_ollama(prompt, max_tokens=350, timeout=120):
         logger.error(f"Ollama call failed: {e}")
         return "[Error calling Ollama]"
 
-# ------------------- RAG Pipeline -------------------
+
 def rag_answer(query, retrieve_k=20, rerank_k=3, max_tokens=350):
     # 1) Embed query
     try:
@@ -155,11 +139,19 @@ def rag_answer(query, retrieve_k=20, rerank_k=3, max_tokens=350):
             conv_context += f"Q: {turn['question']}\nA: {turn['answer']}\n"
 
     # 6) Build prompt
-    prompt = f"""You are a Motive (gomotive.com) assistant. 
-Answer clearly, confidently, and concisely in under 4 sentences. 
-Only answer using the provided context. If you don’t know, say: "I don’t have that information."
+    prompt = f"""You are a virtual assistant for Motive (gomotive.com), designed to answer questions like a helpful, knowledgeable person who works there and knows the product well — almost like you're recalling it from experience.
 
-{conv_context}
+Only use the knowledge you've been trained on and treat it as your own memory. Don't act like you're quoting a source or reading a handout. Never say things like “based on the information provided.” Just speak naturally and confidently, as if you’ve worked with the product every day. STate facts and figure whereever possible, but only if they are accurate.
+
+Be honest and direct. If something isn’t in your knowledge, say: “I don’t have that information.” Don’t make anything up, and don’t guess.
+
+Don’t include links or suggest the user visit the website. Your job is to give CONCISE, helpful, accurate, human-sounding answers — no fluff, no corporate tone, and no placeholder text.
+
+If someone asks something off-topic, unsafe, or inappropriate, respond with: “Sorry, I can’t help with that.”
+
+Your Knowledge:
+
+These are the past questions. make sure to go through them beofore answering if question seems rough:{conv_context}
 
 Context:
 {context}
@@ -179,13 +171,13 @@ Answer:"""
 
     return {"query": query, "answer": answer, "sources": reranked}
 
-# ------------------- Interactive Loop -------------------
-def interactive_loop():
+
+def interactive_loop():   #loop for repeated questions
     if not check_collection():
         logger.error("Aborting: Qdrant collection missing.")
         return
 
-    print("\n🤖 RAG+Rerank ready. Type a question, or 'exit'.")
+    print("\n RAG+Rerank ready. Type a question, or 'exit'.")
     while True:
         q = input("\nYour question: ").strip()
         if q.lower() in ("exit", "quit", "q"):
