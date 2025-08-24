@@ -25,7 +25,7 @@ ________________________________________________________________________________
 # 🛠 Installation
 1.	Clone the repository:
    ```bash
- 	git clone <repo_url>
+ 	git clone https://github.com/zeninlock/qdrant-rag-chatbot-framework
 	cd motive-rag-chatbot
    ```
 
