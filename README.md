@@ -86,35 +86,35 @@ _____________________________________________________________________________
 
 # 🔍 How It Works:
 
-1.	Data Ingestion:
+1.**Data Ingestion:**
 - Text files are pulled from a user-provided AWS S3 bucket.
 - Text is split into smaller chunks (default 180 tokens per chunk with 70 token overlap) to optimize semantic retrieval.
   
-2.	Embeddings Generation:
-	•	Each chunk is converted into a 1024-dimensional dense vector using the BGE-M3 model.
-	•	Embeddings capture semantic meaning, so similar ideas are close in vector space, even if words differ.
+2.**Embeddings Generation:**
+- Each chunk is converted into a 1024-dimensional dense vector using the BGE-M3 model.
+- Embeddings capture semantic meaning, so similar ideas are close in vector space, even if words differ.
   
-3.	Vector Storage:
-	•	Chunks and their embeddings are stored in Qdrant, a fast, scalable vector database.
-	•	Qdrant enables cosine similarity searches to quickly find chunks most relevant to a user query.
+3.**Vector Storage:**
+- Chunks and their embeddings are stored in Qdrant, a fast, scalable vector database.
+- Qdrant enables cosine similarity searches to quickly find chunks most relevant to a user query.
   
-4.	Query Processing:
-	•	A user asks a question through the interactive CLI.
-	•	The question is embedded using BGE-M3.
-	•	Top k matching chunks are retrieved from Qdrant based on vector similarity.
+4.**Query Processing:**
+- A user asks a question through the interactive CLI.
+- The question is embedded using BGE-M3.
+- Top k matching chunks are retrieved from Qdrant based on vector similarity.
   
-5.	Reranking:
-	•	Retrieved chunks are reranked using a cross-encoder model, which evaluates the relevance of each chunk to the query.
-	•	Only the top 3 chunks are kept as context.
+5.**Reranking:**
+- Retrieved chunks are reranked using a cross-encoder model, which evaluates the relevance of each chunk to the query.
+- Only the top 3 chunks are kept as context.
   
-7.	Answer Generation:
-	•	A prompt is created for Ollama LLM, including the top context chunks and last few conversation turns.
-	•	The LLM generates a concise (30–40 words), accurate, human-like response.
-	•	If the information is missing or ambiguous, the bot responds honestly: “I don’t have that information.”
+7.**Answer Generation:**
+- A prompt is created for Ollama LLM, including the top context chunks and last few conversation turns.
+- The LLM generates a concise (30–40 words), accurate, human-like response.
+- If the information is missing or ambiguous, the bot responds honestly: “I don’t have that information.”
   
-8.	Conversation Management:
-	•	Keeps track of the last 5 interactions for context-aware answers.
-	•	History is updated automatically after each response.
+8.**Conversation Management:**
+- Keeps track of the last 5 interactions for context-aware answers.
+- History is updated automatically after each response.
   
-9.	Optional Backup:
-	•	Embeddings metadata can be backed up to S3 for recovery or migration.
+9.**Optional Backup:**
+- Embeddings metadata can be backed up to S3 for recovery or migration.
